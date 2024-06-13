@@ -1,0 +1,81 @@
+---
+title: "SIR Model Example"
+# subtitle: "Numerical approximations"
+description: "Day 3: Tasks & Activities"
+date: 2024-08-07
+format: html
+toc: true
+editor_options: 
+  chunk_output_type: console
+---
+
+::: {.callout-note}
+## **Credit:** 
+This example is built on (and closely follows) [this example](http://rstudio-pubs-static.s3.amazonaws.com/6852_c59c5a2e8ea3456abbeb017185de603e.html) presented by Dr. Aidan Findlater
+:::
+
+The [**S**usceptible-**I**nfectious-**R**ecovered (SIR) model](https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology) is a mathematical model describing the spread of a novel pathogen through a population.
+
+## 1. Load packages
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(deSolve)
+```
+
+## 2. Define parameters
+
+```{r}
+# Proportion in each compartment: Susceptible 0.999999, Infected 0.000001, Recovered 0 (these are directly from the example linked above) ----
+init <- c(S = 1-1e-6, I = 1e-6, R = 0.0)
+
+# beta: infection parameter; gamma: recovery parameter ----
+parameters <- c(beta = 2.316, gamma = 0.261)
+
+# time frame ----
+times <- seq(0, 100, by = 0.5)
+```
+
+## 3. Create the function with the differential equations:
+
+```{r}
+# Build the function with all ----
+sir <- function(time, init, parameters) {
+
+  with(as.list(c(init, parameters)), {
+    dS <- -beta * S * I
+    dI <-  beta * S * I - gamma * I
+    dR <-  gamma * I
+    
+    return(list(c(dS, dI, dR)))
+    
+  })
+  
+}
+```
+
+## 4. Approximate the solution using `deSolve::ode()`:
+
+```{r}
+# Solve using `deSolve::ode()` ----
+approximation <- ode(y = init, times = times, func = sir, parms = parameters)
+```
+
+## 5. Make it something we can plot:
+```{r}
+# Get output into a data frame ----
+approx_df <- as.data.frame(approximation)
+
+# Pivot longer so R will do the work for us ----
+approx_long <- approx_df %>% 
+  pivot_longer(cols = S:R, names_to = "population", values_to = "proportion")
+```
+
+## 6. Plot the output with ggplot:
+
+```{r}
+ggplot(data = approx_long, aes(x = time, y = proportion)) +
+  geom_line(aes(color = population))
+```
+
