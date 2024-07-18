@@ -1,6 +1,5 @@
 ---
 title: "SIR Model Example"
-# subtitle: "Numerical approximations"
 description: "Day 3: Tasks & Activities"
 date: 2024-08-07
 format: html
